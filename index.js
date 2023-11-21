@@ -242,8 +242,31 @@ async function run() {
         if(req.params.email !== req.decoded.email){
           return res.status(403).send({message:'forbidden access'})
         }
-        const result=paymentCollection.find().toArray()
+        const result=await paymentCollection.find(query).toArray()
         res.send(result)
+      })
+
+      // analytics
+      app.get('/admin-stats',verifyToken,verifyAdmin,async(req,res)=>{
+        const users=await userCollection.estimatedDocumentCount();
+        const menuItems=await menuCollection.estimatedDocumentCount();
+        const orders=await paymentCollection.estimatedDocumentCount();
+
+        
+
+        const result=await paymentCollection.aggregate([
+          {
+            $group:{
+              _id:null,
+              totalRevenue:{
+                $sum:'$price'
+              }
+            }
+          }
+        ]).toArray()
+        const revenue=result.length>0 ? result[0].totalRevenue : 0;
+
+        res.send({users,menuItems,orders,revenue})
       })
 
 

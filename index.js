@@ -237,12 +237,29 @@ async function run() {
         res.send({paymentResult,deleteResult})
       })
 
+      app.patch('/payments/:id',async(req,res)=>{
+        const id=req.params.id;
+        const filter={_id:new ObjectId(id)}
+        const updatedDoc={
+            $set:{
+                status:'payment'
+            }
+        }
+        const result=await paymentCollection.updateOne(filter,updatedDoc)
+        res.send(result)
+    })
+
       app.get('/payments/:email',verifyToken,async(req,res)=>{
         const query={email: req.params.email}
         if(req.params.email !== req.decoded.email){
           return res.status(403).send({message:'forbidden access'})
         }
         const result=await paymentCollection.find(query).toArray()
+        res.send(result)
+      })
+
+      app.get('/payments',async(req,res)=>{
+        const result=await paymentCollection.find().toArray();
         res.send(result)
       })
 
